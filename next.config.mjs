@@ -7,7 +7,9 @@ await import("./src/env.mjs");
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
-
+  images: {
+   domains: ['storage-box-tem-project.s3.us-west-1.amazonaws.com'],
+  },
   /**
    * If you are using `appDir` then you must comment the below `i18n` config out.
    *

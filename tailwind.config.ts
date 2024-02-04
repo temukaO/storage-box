@@ -9,6 +9,9 @@ export default {
         sans: ["var(--font-sans)", ...fontFamily.sans],
       },
     },
+    daisyui: {
+      themes: ["light", "dark"],
+    },
   },
-  plugins: [],
+  plugins: [require("daisyui")],
 } satisfies Config;

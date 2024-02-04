@@ -5,7 +5,7 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 export const postsRouter = createTRPCRouter({
   getAll: protectedProcedure
-  .query(({ ctx }) => {
+  .query(async ({ ctx }) => {
     return ctx.db.post.findMany({
       where: {
         postId: ctx.session.user.id,
@@ -14,24 +14,25 @@ export const postsRouter = createTRPCRouter({
   }),
 
   create: protectedProcedure
-    .input(z.object({ content: z.string() }))
+    .input(z.object({ content: z.string(), description: z.string() }))
     .mutation(({ ctx, input }) => {
       return ctx.db.post.create({
         data: {
           postId: ctx.session.user.id,
           content: input.content,
+          description: input.description,
         },
       });
     }),
-    /*
+    
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string(),  }))
     .mutation(async ({ ctx, input}) =>{
-      return ctx.prisma.post.delete({
+      return ctx.db.post.delete({
         where: {
           id: input.id,
         }
       })
     } )
-*/
+
 });
