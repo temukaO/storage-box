@@ -21,6 +21,7 @@ model Post {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
     content String     
+    presignedurl String @db.Char(255)
     user   User   @relation(fields: [postId], references: [id])
     postId String
 }

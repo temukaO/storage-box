@@ -14,13 +14,14 @@ export const postsRouter = createTRPCRouter({
   }),
 
   create: protectedProcedure
-    .input(z.object({ content: z.string(), description: z.string() }))
+    .input(z.object({ content: z.string(), description: z.string(), presignedurl: z.string()}))
     .mutation(({ ctx, input }) => {
       return ctx.db.post.create({
         data: {
           postId: ctx.session.user.id,
           content: input.content,
           description: input.description,
+          presignedurl: input.presignedurl,
         },
       });
     }),

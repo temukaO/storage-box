@@ -1,7 +1,6 @@
 import {useSession, } from "next-auth/react";
 import Head from "next/head";
 import Login from "~/components/login";
-import { api, RouterOutputs } from "~/utils/api";
 import { type NextPage } from "next";
 import { StandardDropzone } from "~/components/dropzone";
 

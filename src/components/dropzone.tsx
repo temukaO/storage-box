@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect} from "react";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import { api } from "../utils/api";
@@ -7,7 +7,7 @@ import Image from "next/image";
 
 export const StandardDropzone = () => {
   const { data: sessionData } = useSession();
-  const [presignedUrl, setPresignedUrl] = useState<string | null>(null);
+  
   const [putUrl, setPutUrl] = useState<string | null>(null);
   const { mutateAsync: createObject } = api.s3.createObject.useMutation();
   const { mutateAsync: fetchPresignedUrls } =
@@ -44,7 +44,7 @@ export const StandardDropzone = () => {
             setPutUrl(url);
             setSubmitDisabled(false);
           })
-          .catch((err) => console.error(err));
+          .catch((err) => console.error(err));        
       },
     });
 
@@ -63,25 +63,35 @@ export const StandardDropzone = () => {
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                mutate({ description: inputValue, content: file.name });
+                //mutate({ description: inputValue, content: file.name, });
               }
             }}
           />
         </li>
       ));
     return null;
-  }, [mutate, inputValue, acceptedFiles, submitDisabled]);
+  }, [acceptedFiles, submitDisabled]);
 
   const handleSubmit = async () => {
     if (acceptedFiles.length > 0 && putUrl !== null) {
       const file = acceptedFiles[0]!;
+      
+      await fetchPresignedUrls({
+        key: file.name,
+      })
+        .then((url) => {
+          mutate({ description: inputValue, content: file.name, presignedurl: url});
+          console.log(url);
+          setSubmitDisabled(false);
+        }) 
+        .catch((err) => console.error(err));
 
       await axios
         .put(putUrl, file.slice(), {
           headers: { "Content-Type": file.type },
         })
         .then((response) => {
-          mutate({ description: inputValue, content: file.name });
+          
           console.log("Successfully uploaded ", file.name, " to prisma");
           console.log(response);
           console.log("Successfully uploaded ", file.name);
@@ -89,9 +99,6 @@ export const StandardDropzone = () => {
         .catch((err) => console.error(err));
       setSubmitDisabled(true);
     }
-  };
-  const handelClose = () => {
-    setView(false);
   };
   const handleDelete = async (postId: string) => {
     deleteObject({
@@ -115,29 +122,20 @@ export const StandardDropzone = () => {
 
   const cancelSubmit = () => {
     setSubmitDisabled(true);
-    setPresignedUrl(null);
     setPutUrl(null);
   };
-  const ImageView = useMemo(() => {
-    //Enter file name and responds with presignedurl of the file
-    fetchPresignedUrls({
-      key: selectedPost,
-    })
-      .then((url) => {
-        setPresignedUrl(url);
-        console.log(url);
-        setSubmitDisabled(false);
-      })
-      .catch((err) => console.error(err));
-    console.log(selectedPost);
-    return presignedUrl;
-  }, [fetchPresignedUrls, presignedUrl, selectedPost]);
 
   /*
   const handleDeleteClick = (fileName: string) => {
     setDeletePost(fileName);
   }
   */
+ const handleClose = () => {
+  setView(false);
+ }
+ const handleImageOpen = () => {
+  setView(true);
+ }
   return (
     <section>
       <div className="mt-10 flex flex-col items-center">
@@ -189,35 +187,32 @@ export const StandardDropzone = () => {
                     className="card-body"
                     onClick={() => {
                       setSelectedPost(post.content);
-                      setView(true);
+                      console.log(post.content)
                     }}
                   >
-                    <h2 className="card-title">{post.content}</h2>
-                    {view && post.content == selectedPost && ImageView && (
+                    <h2 className="card-title" onClick={handleImageOpen}>{post.content}</h2>
+                    {view  && (                 
                       <div>
                         <button
-                          onClick={() => {
-                            console.log(view);
-                            handelClose();
-                            console.log(view);
-                          }}
+                          onClick={
+                            handleClose
+                          }
                           className="btn btn-square btn-outline"
                         >
                           hide
                         </button>
                         <Image
-                          src={ImageView}
+                          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                          src={post.presignedurl}
                           alt={post.content}
                           width={400}
                           height={300}
-                          placeholder="blur"
-                          blurDataURL={ImageView}
                         />
                         Caption: {post.description}
                         <button
                           onClick={() => handleDelete(post.id)}
                           className="focus:shadow-outline-red rounded-md border border-red-500 bg-red-500 px-4 py-2 text-white hover:bg-red-600 
-                focus:border-red-600 focus:outline-none active:bg-red-700"
+                focus:border-red-600 focus:outline-none active:bg-red-700 flex justify-center"
                         >
                           Delete
                         </button>
@@ -228,7 +223,7 @@ export const StandardDropzone = () => {
               </div>
             ))
           ) : (
-            <div>No Uploads</div>
+            <div>Loading...</div>
           )}
         </div>
       </div>
