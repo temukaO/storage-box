@@ -50,12 +50,12 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db),
   providers: [
     GithubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
       token: {
         url: "https://www.github.com/oauth/v2/accessToken",
         async request({ client, params, checks, provider }) {
-          const response = awat.client.oauthCallback(
+          const response = await client.oauthCallback(
             provider.callbackUrl,
             params,
             checks,
