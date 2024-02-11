@@ -7,7 +7,6 @@ import Image from "next/image";
 
 export const StandardDropzone = () => {
   const { data: sessionData } = useSession();
-  const [fileCount,setFileCount] = useState(0);
   const [putUrl, setPutUrl] = useState<string | null>(null);
   const { mutateAsync: createObject } = api.s3.createObject.useMutation();
   const { mutateAsync: fetchPresignedUrls } =
@@ -39,7 +38,7 @@ export const StandardDropzone = () => {
       onDropAccepted: (files, _event) => {
         const file = files[0]! as File;
         createObject({
-          key: fileCount.toString(),
+          key: file.name,
         })
           .then((url) => {
             setPutUrl(url);
@@ -71,7 +70,7 @@ export const StandardDropzone = () => {
         </li>
       ));
     return null;
-  }, [acceptedFiles, submitDisabled]);
+  }, [acceptedFiles,submitDisabled]);
 
   const handleSubmit = async () => {
     if (acceptedFiles.length > 0 && putUrl !== null) {
@@ -79,16 +78,15 @@ export const StandardDropzone = () => {
         
       await axios
         .put(putUrl, file.slice(), {
-          headers: { "Content-Type": fileCount },
+          headers: { "Content-Type": file.name },
         })
         .then((response) => {
-          mutate({ description: inputValue, content: fileCount.toString(), presignedurl:"h" });
+          mutate({ description: inputValue, content: file.name, presignedurl:"h" });
           console.log("Successfully uploaded ", file.name, " to prisma");
           console.log(response);
           console.log("Successfully uploaded ", file.name);
         })
         .catch((err) => console.error(err));
-        setFileCount(fileCount+1); 
       setSubmitDisabled(true);
     }
   };
@@ -129,13 +127,11 @@ export const StandardDropzone = () => {
   setView(true);
  }
 
- const handleImageView = () => {
-  console.log(fileCount);
+ const handleImageView = (imagePost: string) => {
   fetchPresignedUrls({
-    key: selectedPost,
+    key: imagePost,
   })
     .then((url) => {
-      console.log("!!!")
       console.log(url);
       setpresignedurl(url);
       setSubmitDisabled(false);
@@ -163,7 +159,7 @@ export const StandardDropzone = () => {
             )}
           </div>
           <aside className="my-2">
-          <ul>{files}</ul>
+          {submitDisabled&&(<ul>{files}</ul>)}
         </aside>
           <div className="flex justify-between">
             <button
@@ -194,11 +190,11 @@ export const StandardDropzone = () => {
                     className="card-body"
                     onClick={() => {
                       setSelectedPost(post.content);
-                      handleImageView();
+                      handleImageView(post.content);
                     }}
                   >
                     <h2 className="card-title" onClick={handleImageOpen}>{post.content}</h2>
-                    {view && (                 
+                    {view && selectedPost == post.content&& (                 
                       <div>
                         <button
                           onClick={
@@ -208,12 +204,12 @@ export const StandardDropzone = () => {
                         >
                           hide
                         </button>
-                        <Image
+                        {(<Image
                           src={presignedurl}
                           alt={post.content}
                           width={400}
                           height={300}
-                        />
+                        />)}
                         Caption: {post.description}
                         <button
                           onClick={() => handleDelete(post.id)}
