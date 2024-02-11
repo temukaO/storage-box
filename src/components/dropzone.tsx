@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect} from "react";
+import { useMemo, useState, } from "react";
 import { useDropzone } from "react-dropzone";
 import axios from "axios";
 import { api } from "../utils/api";
@@ -19,7 +19,7 @@ export const StandardDropzone = () => {
   const [inputValue, setInputValue] = useState("");
   //const [visible,SetVisible] = useState(true);
   const [deleteUrl, setDeleteUrl] = useState("");
-  const { data: posts, refetch: refetchPost } = api.post.getAll.useQuery(
+  const { data: posts, } = api.post.getAll.useQuery(
     undefined,
     {
       enabled: sessionData?.user != undefined,
