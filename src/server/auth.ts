@@ -6,9 +6,6 @@ import {
   type NextAuthOptions,
 } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
-import { any } from "zod";
-
-import { env } from "~/env.mjs";
 import { db } from "~/server/db";
 
 /**

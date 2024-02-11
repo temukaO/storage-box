@@ -7,14 +7,15 @@ import Image from "next/image";
 
 export const StandardDropzone = () => {
   const { data: sessionData } = useSession();
-  
+  const [fileCount,setFileCount] = useState(0);
   const [putUrl, setPutUrl] = useState<string | null>(null);
   const { mutateAsync: createObject } = api.s3.createObject.useMutation();
   const { mutateAsync: fetchPresignedUrls } =
     api.s3.getStandardUploadPresignedUrl.useMutation();
+  const [presignedurl,setpresignedurl] = useState("");
   const { mutateAsync: deleteObject } = api.s3.deleteObjects.useMutation();
   const [submitDisabled, setSubmitDisabled] = useState(true);
-  const [view, setView] = useState(true);
+  const [view, setView] = useState(false);
   const [inputValue, setInputValue] = useState("");
   //const [visible,SetVisible] = useState(true);
   const [deleteUrl, setDeleteUrl] = useState("");
@@ -38,13 +39,13 @@ export const StandardDropzone = () => {
       onDropAccepted: (files, _event) => {
         const file = files[0]! as File;
         createObject({
-          key: file.name,
+          key: fileCount.toString(),
         })
           .then((url) => {
             setPutUrl(url);
             setSubmitDisabled(false);
           })
-          .catch((err) => console.error(err));        
+          .catch((err) => console.error(err));       
       },
     });
 
@@ -75,28 +76,19 @@ export const StandardDropzone = () => {
   const handleSubmit = async () => {
     if (acceptedFiles.length > 0 && putUrl !== null) {
       const file = acceptedFiles[0]!;
-      
-      await fetchPresignedUrls({
-        key: file.name,
-      })
-        .then((url) => {
-          mutate({ description: inputValue, content: file.name, presignedurl: url});
-          console.log(url);
-          setSubmitDisabled(false);
-        }) 
-        .catch((err) => console.error(err));
-
+        
       await axios
         .put(putUrl, file.slice(), {
-          headers: { "Content-Type": file.type },
+          headers: { "Content-Type": fileCount },
         })
         .then((response) => {
-          
+          mutate({ description: inputValue, content: fileCount.toString(), presignedurl:"h" });
           console.log("Successfully uploaded ", file.name, " to prisma");
           console.log(response);
           console.log("Successfully uploaded ", file.name);
         })
         .catch((err) => console.error(err));
+        setFileCount(fileCount+1); 
       setSubmitDisabled(true);
     }
   };
@@ -135,6 +127,21 @@ export const StandardDropzone = () => {
  }
  const handleImageOpen = () => {
   setView(true);
+ }
+
+ const handleImageView = () => {
+  console.log(fileCount);
+  fetchPresignedUrls({
+    key: selectedPost,
+  })
+    .then((url) => {
+      console.log("!!!")
+      console.log(url);
+      setpresignedurl(url);
+      setSubmitDisabled(false);
+    }) 
+    .catch((err) => console.error(err));
+
  }
   return (
     <section>
@@ -187,11 +194,11 @@ export const StandardDropzone = () => {
                     className="card-body"
                     onClick={() => {
                       setSelectedPost(post.content);
-                      console.log(post.content)
+                      handleImageView();
                     }}
                   >
                     <h2 className="card-title" onClick={handleImageOpen}>{post.content}</h2>
-                    {view  && (                 
+                    {view && (                 
                       <div>
                         <button
                           onClick={
@@ -202,8 +209,7 @@ export const StandardDropzone = () => {
                           hide
                         </button>
                         <Image
-                          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                          src={post.presignedurl}
+                          src={presignedurl}
                           alt={post.content}
                           width={400}
                           height={300}
